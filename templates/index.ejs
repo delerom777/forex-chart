@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{.Title}}</title>
+    <script src="https://code.highcharts.com/stock/highstock.js"></script>
+    <script src="https://code.highcharts.com/stock/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/stock/modules/export-data.js"></script>
+    <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+
+</head>
+<body>
+<div id="container" style="height: 400px; min-width: 310px"></div>
+<script>
+
+   var obj = <%- chart %>;
+   console.log(obj);
+    
+
+
+Highcharts.stockChart('container', {
+    chart: {
+          events: {
+              load: function () {
+                  var socket = io.connect('http://localhost:3000');
+                  var series = this.series[0];
+                
+                  socket.on('update', function (sample) {
+                      var dev = (new Date()).getTime();
+                      series.addPoint([sample.x, sample.y], true, true);
+                  });
+            }
+        }
+    },
+
+    rangeSelector: {
+        buttons: [{
+            count: 1,
+            type: 'minute',
+            text: '1M'
+        }, {
+            count: 5,
+            type: 'minute',
+            text: '5M'
+        }, {
+            type: 'all',
+            text: 'All'
+        }],
+        inputEnabled: false,
+        selected: 0
+    },
+
+    title: {
+        text: 'Live random data'
+    },
+    
+    xAxis: {
+        type: 'datetime'
+    },
+
+    exporting: {
+        enabled: false
+    },
+
+    series: [{
+        name: 'BID',
+        data: (function () {
+            var myData = [];
+
+            for (var i = 0; i < obj.length; i++) {
+                
+                var dtr = Number(obj[i].date);
+                var time = (new Date(dtr)).toISOString();
+                var btr = obj[i].bid;
+                myData.push([dtr,btr]);
+                i++
+            }
+            return myData;
+        }())
+    }]
+});
+
+        
+             
+
+</script>
+
+</body>
+</html>
